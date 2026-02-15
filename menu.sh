@@ -2873,4 +2873,14 @@ if [[ "$1" == "--install-setup" ]]; then
     exit 0
 fi
 
+if [[ "$1" == "--web-ui" ]]; then
+    if [[ -f /usr/local/bin/firewallfalcon-webui ]]; then
+        python3 /usr/local/bin/firewallfalcon-webui --menu-path /usr/local/bin/menu
+    else
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        python3 "$script_dir/web_ui.py" --menu-path "$script_dir/menu.sh"
+    fi
+    exit $?
+fi
+
 main_menu
