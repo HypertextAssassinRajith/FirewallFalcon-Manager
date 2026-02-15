@@ -12,10 +12,16 @@ echo "Installing FirewallFalcon Manager..."
 # URLs (IPv4 forced to avoid GitHub IPv6 issues)
 MENU_URL="https://raw.githubusercontent.com/firewallfalcons/FirewallFalcon-Manager/main/menu.sh"
 SSHD_URL="https://raw.githubusercontent.com/firewallfalcons/FirewallFalcon-Manager/main/ssh"
+WEB_UI_URL="https://raw.githubusercontent.com/firewallfalcons/FirewallFalcon-Manager/main/web_ui.py"
 
 # Install menu
 wget -4 -q -O /usr/local/bin/menu "$MENU_URL"
 chmod +x /usr/local/bin/menu
+wget -4 -q -O /usr/local/bin/firewallfalcon-webui "$WEB_UI_URL" || {
+    echo "ERROR: Failed to download web UI launcher from $WEB_UI_URL. Check network and retry."
+    exit 1
+}
+chmod +x /usr/local/bin/firewallfalcon-webui
 
 echo "Applying FirewallFalcon SSH configuration..."
 

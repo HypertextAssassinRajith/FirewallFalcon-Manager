@@ -66,6 +66,22 @@ Nginx acts as a **smart entry point** for all connections:
 
 ---
 
+### 🖥️ Web UI (Browser Access)
+
+You can run the manager menu from a browser (same interactive features as the terminal menu):
+
+```bash
+menu --web-ui
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8088
+```
+
+---
+
 ## 🧱 System Requirements
 
 * Ubuntu / Debian-based Linux (Ubuntu 20.04+ recommended)
