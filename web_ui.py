@@ -4,10 +4,10 @@ import json
 import os
 import pty
 import select
-import signal
 import subprocess
 import threading
 import uuid
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -44,6 +44,7 @@ HTML = """<!doctype html>
 let sid = null;
 const out = document.getElementById('out');
 const inp = document.getElementById('in');
+const POLL_INTERVAL_MS = 500;
 const stripAnsi = s => s.replace(/\\x1B\\[[0-9;?]*[ -/]*[@-~]/g, '').replace(/\\x1B\\][^\\x07]*\\x07/g, '');
 
 async function api(path, method='GET', body=null){
@@ -76,7 +77,7 @@ document.getElementById('enter').onclick = () => sendInput("\\n");
 document.getElementById('stop').onclick = async () => { if(sid){ await api('/stop?sid='+encodeURIComponent(sid), 'POST'); sid = null; } };
 inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); sendInput(inp.value + "\\n"); } });
 
-start().then(() => setInterval(poll, 1000));
+start().then(() => setInterval(poll, POLL_INTERVAL_MS));
 </script>
 </body>
 </html>
@@ -101,29 +102,32 @@ class SessionManager:
     def read(self, sid):
         with self.lock:
             s = self.sessions.get(sid)
-        if not s:
-            return ""
-        fd = s["fd"]
-        chunks = []
-        while True:
-            ready, _, _ = select.select([fd], [], [], 0)
-            if not ready:
-                break
-            try:
-                data = os.read(fd, 4096)
-            except OSError:
-                break
-            if not data:
-                break
-            chunks.append(data.decode(errors="replace"))
+            if not s:
+                return ""
+            fd = s["fd"]
+            chunks = []
+            while True:
+                ready, _, _ = select.select([fd], [], [], 0)
+                if not ready:
+                    break
+                try:
+                    data = os.read(fd, 4096)
+                except OSError:
+                    break
+                if not data:
+                    break
+                chunks.append(data.decode(errors="replace"))
         return "".join(chunks)
 
     def write(self, sid, data):
         with self.lock:
             s = self.sessions.get(sid)
-        if not s:
-            return
-        os.write(s["fd"], data.encode())
+            if not s:
+                return
+            try:
+                os.write(s["fd"], data.encode())
+            except (OSError, UnicodeEncodeError):
+                return
 
     def stop(self, sid):
         with self.lock:
@@ -187,6 +191,7 @@ def make_handler(manager: SessionManager):
             self._json({"error": "not found"}, 404)
 
         def log_message(self, _format, *_args):
+            # Silence default HTTP logs to keep terminal output focused on menu status.
             return
 
     return Handler
@@ -198,6 +203,12 @@ def main():
     parser.add_argument("--port", type=int, default=8088)
     parser.add_argument("--menu-path", default="/usr/local/bin/menu")
     args = parser.parse_args()
+    if args.host not in {"127.0.0.1", "localhost", "::1"}:
+        print("Error: For security, --host must be localhost (127.0.0.1, localhost, or ::1).")
+        sys.exit(1)
+    if not os.path.isabs(args.menu_path) or not os.path.isfile(args.menu_path) or not os.access(args.menu_path, os.X_OK):
+        print(f"Error: Invalid --menu-path '{args.menu_path}'. It must be an absolute executable file path.")
+        sys.exit(1)
 
     manager = SessionManager(args.menu_path)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(manager))
