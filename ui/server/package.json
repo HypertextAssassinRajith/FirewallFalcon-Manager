@@ -1,0 +1,14 @@
+{
+  "name": "firewallfalcon-api",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon --watch src --ext js,mjs,json --signal SIGTERM src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "ui": "file:.."
+  }
+}
