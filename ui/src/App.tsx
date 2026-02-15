@@ -288,20 +288,61 @@ function App() {
 
             <div className="card" style={{ textAlign: 'left', marginTop: 12 }}>
               <h3 style={{ marginTop: 0 }}>System Status</h3>
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                {`OS         ${status?.os ?? 'Loading...'}\n` +
-                  `Memory     ${status?.memoryUsed ?? 'Loading...'}          | Online Sessions: ${
-                    status?.onlineSessions ?? 'Loading...'
-                  }\n` +
-                  `Users      ${status?.usersManaged ?? 'Loading...'}   | Sys Load (1m): ${
-                    status?.sysLoad1m ?? 'Loading...'
-                  }\n` +
-                  `Uptime: ${status?.uptime ?? 'Loading...'}\n`}
+              <pre
+                style={{
+                  margin: 0,
+                  padding: 14,
+                  borderRadius: 10,
+                  background: 'rgba(0,0,0,0.25)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  fontFamily:
+                    'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                  whiteSpace: 'pre',
+                  overflowX: 'auto',
+                }}
+              >
+                {(() => {
+                  const os = status?.os ?? 'Loading...'
+                  const uptime = status?.uptime ?? 'Loading...'
+                  const mem = status?.memoryUsed ?? 'Loading...'
+                  const sessions = status?.onlineSessions ?? 'Loading...'
+                  const managed = status?.usersManaged ?? 'Loading...'
+                  const load1m = status?.sysLoad1m ?? 'Loading...'
+
+                  const line = '─────────────────────────────────────────────────────────'
+                  const padR = (s: string, n: number) => (s.length >= n ? s : s + ' '.repeat(n - s.length))
+
+                  const left1 = `OS         ${os}`
+                  const right1 = `Uptime: ${uptime}`
+                  const left2 = `Memory     ${mem}`
+                  const right2 = `Online Sessions: ${sessions}`
+                  const left3 = `Users      ${managed}`
+                  const right3 = `Sys Load (1m): ${load1m}`
+
+                  return (
+                    line +
+                    '\n' +
+                    ' ' +
+                    padR(left1, 33) +
+                    ' | ' +
+                    right1 +
+                    '\n' +
+                    ' ' +
+                    padR(left2, 33) +
+                    ' | ' +
+                    right2 +
+                    '\n' +
+                    ' ' +
+                    padR(left3, 33) +
+                    ' | ' +
+                    right3 +
+                    '\n' +
+                    line
+                  )
+                })()}
               </pre>
-              <p style={{ marginTop: 10, opacity: 0.7 }}>
-                Note: this is a placeholder layout. Next we should add a dedicated API endpoint (e.g. <code>/api/status</code>)
-                on Linux to return real uptime/memory/users/load.
-              </p>
             </div>
 
             <div
